@@ -782,6 +782,13 @@ class LLMAdapter:
         # For Ollama and DeepSeek (OpenAI-compatible Chat Completions):
         # pass stream_options so the final chunk includes token usage.
         # Defensively build kwargs to stay compatible with older SDK versions.
+        # Ollama cloud replies with an empty "load" stub for requests that
+        # contain no user turn (e.g. system-only structured outputs), so
+        # ensure the conversation ends with a user message on this provider.
+        if self.provider == "ollama" and not any(m.get("role") == "user" for m in messages):
+            messages = messages + [
+                {"role": "user", "content": "Proceed with the task above following the instructions you were given."}
+            ]
         extra: dict = {}
         if stream:
             extra["stream_options"] = {"include_usage": True}
