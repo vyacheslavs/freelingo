@@ -1309,6 +1309,7 @@
     "statusConnecting": "Conectando...",
     "statusListening": "Escuchando...",
     "statusDetecting": "Detectando voz...",
+    "statusRecording": "Grabando...",
     "statusSpeaking": "Hablando...",
     "statusError": "Error",
     "errorServicesDisabled": "Los servicios de voz no están habilitados en este servidor.",

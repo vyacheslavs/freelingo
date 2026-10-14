@@ -1309,6 +1309,7 @@
     "statusConnecting": "Łączenie...",
     "statusListening": "Słuchanie...",
     "statusDetecting": "Wykrywanie mowy...",
+    "statusRecording": "Nagrywanie...",
     "statusSpeaking": "Mówienie...",
     "statusError": "Błąd",
     "errorServicesDisabled": "Usługi głosowe nie są włączone na tym serwerze.",

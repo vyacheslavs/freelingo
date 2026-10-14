@@ -275,6 +275,7 @@ type VoiceInputMode = 'vad' | 'ptt'
 // Allow the backend's 60-second provider budget plus transport/auth overhead.
 const WARMUP_TIMEOUT_MS = 75_000
 const warmupLogger = getLogger('conversation-warmup')
+const pttModeLogger = getLogger('conversation-push-to-talk')
 const convLogger = ENABLE_CONVERSATION_AUDIO_DEBUG_LOGS
   ? getLogger('conversation-audio')
   : silentLogger
@@ -458,6 +459,10 @@ export default function ConversationMode({
     startOnLoad: false,
     getStream: getMicStream,
     resumeStream: getMicStream,
+    // vad.pause() stops the mic tracks by default, which would kill audio
+    // for the push-to-talk capture and any later VAD re-arm. Keep the stream
+    // alive here; teardown stops the tracks explicitly in finalizeSession.
+    pauseStream: async () => {},
     redemptionMs: resolveVadRedemptionMs(
       user?.conversation_speech_pause,
       cefrLevel
@@ -661,14 +666,23 @@ export default function ConversationMode({
         return
       }
       const audio = capture?.stop() ?? null
-      speechStartedAtRef.current = null
-      if (!audio || !sessionActiveRef.current) return
+      if (!audio || !sessionActiveRef.current) {
+        speechStartedAtRef.current = null
+        pttModeLogger.warn('push to talk release dropped', {
+          hadAudio: Boolean(audio),
+          audioSamples: audio ? audio.length : 0,
+          sessionActive: sessionActiveRef.current,
+        })
+        return
+      }
 
       // Deliberate but near-silent or razor-short holds are dropped, the
-      // same misfire filter the VAD path applies.
+      // same misfire filter the VAD path applies. isLikelySpeech reads
+      // speechStartedAtRef, so clear it only after the check.
       const speech = isLikelySpeech(audio, PTT_MIN_UTTERANCE_MS)
+      speechStartedAtRef.current = null
       if (!speech.isSpeech) {
-        convLogger.warn('push to talk utterance rejected', {
+        pttModeLogger.warn('push to talk utterance rejected', {
           rms: speech.rms,
           durationMs: Math.round(speech.durationMs),
         })
@@ -676,7 +690,12 @@ export default function ConversationMode({
       }
 
       const ws = wsRef.current
-      if (!ws || ws.readyState !== WebSocket.OPEN) return
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        pttModeLogger.warn('push to talk socket unavailable', {
+          wsState: ws ? ws.readyState : null,
+        })
+        return
+      }
 
       assistantTurnActiveRef.current = true
       try {
@@ -1543,8 +1562,9 @@ export default function ConversationMode({
           status={status}
           userSpeaking={userSpeaking}
           assistantSpeaking={assistantSpeaking}
+          pttHolding={pttRecording}
         />
-        {!(trialMode && status === 'ended') && (
+        {!(trialMode && status === 'ended') && status !== 'live' && (
           <MicButton
             status={status}
             sessionActive={sessionActive}
@@ -1552,7 +1572,15 @@ export default function ConversationMode({
             onStop={handleStop}
           />
         )}
-        {sessionActive && voiceInputMode === 'ptt' && (
+        {status === 'live' && voiceInputMode === 'vad' && (
+          <MicButton
+            status={status}
+            sessionActive={sessionActive}
+            onStart={handleStart}
+            onStop={handleStop}
+          />
+        )}
+        {status === 'live' && voiceInputMode === 'ptt' && (
           <div className="flex flex-col items-center gap-1">
             <PushToTalkButton
               recording={pttRecording}
@@ -1562,6 +1590,13 @@ export default function ConversationMode({
             <span className="text-fl-hint text-fl-muted-4 font-mono text-xs tracking-wide">
               {pttRecording ? t('pttRelease') : t('pttHold')}
             </span>
+            <button
+              type="button"
+              onClick={handleStop}
+              className="text-fl-muted-3 hover:text-fl-fg font-mono text-xs tracking-widest uppercase transition-colors"
+            >
+              {t('stop')}
+            </button>
           </div>
         )}
       </div>

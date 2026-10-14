@@ -1309,6 +1309,7 @@
     "statusConnecting": "Connecting...",
     "statusListening": "Listening...",
     "statusDetecting": "Detecting speech...",
+    "statusRecording": "Recording...",
     "statusSpeaking": "Speaking...",
     "statusError": "Error",
     "errorServicesDisabled": "Voice services are not enabled on this server.",

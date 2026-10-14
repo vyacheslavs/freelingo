@@ -1309,6 +1309,7 @@
     "statusConnecting": "Ansluter...",
     "statusListening": "Lyssnar...",
     "statusDetecting": "Identifierar tal...",
+    "statusRecording": "Spelar in...",
     "statusSpeaking": "Talar...",
     "statusError": "Fel",
     "errorServicesDisabled": "Rösttjänster är inte aktiverade på den här servern.",

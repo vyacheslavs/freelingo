@@ -1309,6 +1309,7 @@
     "statusConnecting": "Yhdistetään...",
     "statusListening": "Kuunnellaan...",
     "statusDetecting": "Tunnistetaan puhetta...",
+    "statusRecording": "Tallennetaan...",
     "statusSpeaking": "Puhuu...",
     "statusError": "Virhe",
     "errorServicesDisabled": "Äänipalvelut eivät ole käytössä tällä palvelimella.",

@@ -1309,6 +1309,7 @@
     "statusConnecting": "Verbinde...",
     "statusListening": "Höre zu...",
     "statusDetecting": "Sprache wird erkannt...",
+    "statusRecording": "Aufnahme läuft...",
     "statusSpeaking": "Spricht...",
     "statusError": "Fehler",
     "errorServicesDisabled": "Sprachdienste sind auf diesem Server nicht aktiviert.",

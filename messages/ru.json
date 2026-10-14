@@ -1309,6 +1309,7 @@
     "statusConnecting": "Подключение...",
     "statusListening": "Слушаю...",
     "statusDetecting": "Обнаружение речи...",
+    "statusRecording": "Запись...",
     "statusSpeaking": "Говорит...",
     "statusError": "Ошибка",
     "errorServicesDisabled": "Голосовые сервисы не активированы на этом сервере.",

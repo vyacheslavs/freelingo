@@ -1309,6 +1309,7 @@
     "statusConnecting": "Povezivanje...",
     "statusListening": "Slušanje...",
     "statusDetecting": "Prepoznavanje govora...",
+    "statusRecording": "Snimanje...",
     "statusSpeaking": "Govori...",
     "statusError": "Pogreška",
     "errorServicesDisabled": "Glasovne usluge nisu omogućene na ovom poslužitelju.",

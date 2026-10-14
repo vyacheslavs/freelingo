@@ -1309,6 +1309,7 @@
     "statusConnecting": "Opretter forbindelse...",
     "statusListening": "Lytter...",
     "statusDetecting": "Registrerer tale...",
+    "statusRecording": "Optager...",
     "statusSpeaking": "Taler...",
     "statusError": "Fejl",
     "errorServicesDisabled": "Stemmetjenester er ikke aktiveret på denne server.",

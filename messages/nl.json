@@ -1309,6 +1309,7 @@
     "statusConnecting": "Verbinden...",
     "statusListening": "Luisteren...",
     "statusDetecting": "Spraak detecteren...",
+    "statusRecording": "Opnemen...",
     "statusSpeaking": "Spreken...",
     "statusError": "Fout",
     "errorServicesDisabled": "Spraakdiensten zijn niet ingeschakeld op deze server.",

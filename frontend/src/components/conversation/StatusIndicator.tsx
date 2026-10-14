@@ -13,12 +13,15 @@ interface Props {
   status: ConvStatus
   userSpeaking: boolean
   assistantSpeaking: boolean
+  /** Push-to-talk hold in progress — the boundary is the button, not VAD. */
+  pttHolding?: boolean
 }
 
 export default function StatusIndicator({
   status,
   userSpeaking,
   assistantSpeaking,
+  pttHolding = false,
 }: Props) {
   const t = useTranslations('conversation')
 
@@ -35,7 +38,13 @@ export default function StatusIndicator({
     label = t('statusConnecting')
     pulse = true
   } else if (status === 'live') {
-    if (userSpeaking) {
+    if (pttHolding) {
+      // Hold-to-talk: nothing is being detected, the hold itself is the
+      // utterance boundary.
+      label = t('statusRecording')
+      dotClass = 'text-fl-accent'
+      pulse = true
+    } else if (userSpeaking) {
       label = t('statusDetecting')
       dotClass = 'text-fl-accent'
       pulse = true

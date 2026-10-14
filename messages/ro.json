@@ -1309,6 +1309,7 @@
     "statusConnecting": "Se conectează...",
     "statusListening": "Ascultă...",
     "statusDetecting": "Se detectează vocea...",
+    "statusRecording": "Se înregistrează...",
     "statusSpeaking": "Vorbește...",
     "statusError": "Eroare",
     "errorServicesDisabled": "Serviciile vocale nu sunt activate pe acest server.",

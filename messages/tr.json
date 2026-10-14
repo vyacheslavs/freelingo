@@ -1309,6 +1309,7 @@
     "statusConnecting": "Bağlanıyor...",
     "statusListening": "Dinleniyor...",
     "statusDetecting": "Konuşma algılanıyor...",
+    "statusRecording": "Kaydediliyor...",
     "statusSpeaking": "Konuşuyor...",
     "statusError": "Hata",
     "errorServicesDisabled": "Bu sunucuda ses hizmetleri etkin değil.",
