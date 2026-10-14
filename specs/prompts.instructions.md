@@ -97,7 +97,11 @@ grammar/vocabulary references, native language, and a bounded summary of prior s
 summary includes a bounded deduplicated vocabulary sample gathered from siblings; it is not a complete
 transcript of prior content.
 
-The lesson type selects explanation focus and exercise mix. Generated structures are validated through
+The lesson type selects explanation focus and exercise mix. The generation prompt carries an
+explanation quality contract: `explanation.text` is a short mental-model paragraph (sentences at
+learner level, no rule chains), rules and word groups live in `key_points` as standalone
+per-topic bullets, and `examples` include a contrast pair between the taught form and its closest
+confusable form. Generated structures are validated through
 Pydantic. Separate builders cover invalid-exercise replacement, missing lesson/exercise native
 explanations, hints, fill-blank grading, free-write grading, and pronunciation grading.
 

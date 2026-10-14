@@ -3,16 +3,23 @@
 LESSON_TYPE_GUIDANCE: dict[str, str] = {
     "grammar": (
         "- Teach the form: how the structure is built, its full pattern, and when it is used.\n"
-        "- Explanation must show the paradigm explicitly (endings, auxiliaries, word order,\n"
-        "  agreement) and contrast the structure with a form the student could confuse it with.\n"
+        "- Put the paradigm (endings, auxiliaries, word order, agreement) into key_points, one\n"
+        "  element per bullet — not into explanation.text.\n"
+        "- examples must contain a contrast pair: the structure vs the form students confuse it\n"
+        "  with, same situation, one example each, notes naming the boundary.\n"
         "- Exercises: mostly multiple_choice and fill_blank where the gap tests the structure\n"
         "  itself, not word meaning.\n"
         "- Vocabulary: only the few words needed to demonstrate the structure."
     ),
     "vocabulary": (
         "- Teach words, not rules. Treat the grammar point as a known vehicle for using them.\n"
-        "- Explanation must group the words by meaning, collocation, register, or the situations\n"
-        "  they belong to, with at most a one-line grammar reminder.\n"
+        "- explanation.text describes the situation the word set belongs to — one picture,\n"
+        "  2-3 sentences, no word lists.\n"
+        "- Each meaning/collocation/register group goes in its OWN key_point with 2-4 example\n"
+        "  words and one short phrase of that group. Never chain two groups inside one sentence.\n"
+        "- The grammar note is a single key_point, one line.\n"
+        "- examples must include at least one pair differing only in word choice, with notes\n"
+        "  saying which word fits which situation.\n"
         "- Exercises: word choice, collocation, and fill_blank where the gap is lexical\n"
         "  (which word fits the meaning), not grammatical.\n"
         "- Vocabulary: the richest section of any lesson type — introduce words the student has\n"
@@ -56,8 +63,8 @@ LESSON_TYPE_GUIDANCE: dict[str, str] = {
     ),
     "review": (
         "- Consolidate what the unit already covered. Introduce no new grammar and few new words.\n"
-        "- Explanation must be a compact recap that organizes the material (when to use which\n"
-        "  form) instead of re-teaching it from scratch.\n"
+        "- Explanation: compact recap organized as key_points (when to use which form); do not\n"
+        "  re-teach from scratch. explanation.text stays a 2-4 sentence summary.\n"
         "- Exercises: mixed types spread across the unit's grammar points, harder than in the\n"
         "  earlier lessons — longer sentences, less context, forms in contrast with each other.\n"
         "- Vocabulary: words from earlier lessons of the unit, shown in new combinations."
@@ -165,6 +172,46 @@ Parameters:
 
 {language_prompt_overlay}
 {lesson_type_guidance}{previous_lessons_block}
+━━━ EXPLANATION QUALITY RULES ━━━
+The lesson explanation has three fields, each with its own job. Write all of them in
+{target_language_name}, in language at or below {cefr_level}, as if explaining to a learner
+who is reading in their second language.
+
+"explanation.text" — ONE mental model, 2-4 short sentences:
+- Give the learner a single memorable picture or core contrast: what this structure / word set
+  is for, how it differs from the thing it is most often confused with, and when to reach for it.
+- Maximum ~16 words per sentence. One idea per sentence. No semicolons, no comma splices,
+  no telegraphic phrase chains ("X for A, Y for B, and Z for C"). No grammar jargon without an
+  example right next to it.
+- "text" must NOT contain the form paradigm, rule enumerations, or grouped word lists.
+  Those belong in "key_points". "text" may end with one sentence saying when to use it.
+
+"key_points" — the teachable content, 3-5 discrete bullets:
+- One rule, one use case, or one word group per bullet. Each bullet is a full standalone
+  sentence the learner could quote on its own — never a chain of rules joined by commas.
+- Order by usefulness: the most common use first, edge cases last.
+- Each vocabulary or word-group bullet names its group, 2-4 example words inside it, and one
+  short example phrase. Example of GOOD: "For still-running searches, use 'look for':
+  'I'm looking for my keys.'". Example of BAD: "look for searches in progress and try is for
+  first experiences and retire means stop working".
+
+"examples" — 3-4 natural sentences, MUST include at least one contrast pair:
+- A contrast pair shows the SAME situation twice: once in the taught form, once in the form
+  students confuse with it. Each side is its own example, and each "note" says in one plain
+  sentence what changed between them and which form fits which situation.
+  Pattern: "I've lost my keys." / "I lost my keys yesterday." — note: "No time named = still
+  a present problem; 'yesterday' names a closed time = past simple."
+- Every "note" says what the example demonstrates (one simple sentence), not what it means.
+
+This is how ONE well-structured explanation reads (style reference only; the content will differ):
+text: "The present perfect is a bridge to now. The action happened before now, but the
+sentence is somehow about now. Name a finished time, and the bridge comes down — that is
+past simple."
+key_point: "Use it when a past action leaves a result in front of you: 'I've lost my keys.'"
+example: {{"sentence": "I've lost my keys.", "note": "No time named: the keys are still lost right now."}}
+example: {{"sentence": "I lost my keys yesterday.", "note": "Same event; the named closed time turns it into a past-simple report."}}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 STRICT CONSTRAINTS:
 1. Every grammar structure used must be at or below {cefr_level}.
 2. If grammar_points is non-empty, at least {grammar_exercise_ratio}% of exercises must target one
@@ -247,13 +294,15 @@ Return a JSON object using this exact schema:
   "cefr_level": "{cefr_level}",
   "unit_id": "{unit_id}",
   "explanation": {{
-    "text": "[clear grammatical/vocabulary explanation in {target_language_name}]",
+    "text": "[2-4 short sentences, one memorable mental model; NO rule chains, NO lists, NO grammar jargon]",
     "key_points": [
-      "[first key takeaway in {target_language_name}]",
-      "[second key takeaway]"
+      "[one rule or use case per bullet; a full standalone sentence in simple {target_language_name}; 3-5 bullets]",
+      "[another key point]"
     ],
     "examples": [
-      {{"sentence": "[natural example sentence in {target_language_name}]", "note": "[what this example shows]"}}
+      {{"sentence": "[natural example sentence in {target_language_name}]", "note": "[one simple sentence: what this example demonstrates]"}},
+      {{"sentence": "[contrast pair, side A in the taught form]", "note": "[what changed vs the other side and which form fits which situation]"}},
+      {{"sentence": "[contrast pair, side B in the confusable form]", "note": "[see above]"}}
     ]
   }},
   "native_explanation": {{
@@ -323,6 +372,10 @@ must be entirely in {target_language_name}, EXCEPT for "native_explanation", "na
 Only this meta-prompt is in English.
 
 Before returning, verify:
+- "explanation.text" is 2-4 short sentences with no rule chains or word lists, and
+  "key_points" carries the rules as standalone sentences.
+- "examples" contains at least one contrast pair: the taught form vs its closest confusable
+  form in the same situation.
 - Every fill_blank exercise has ___ inside the "question" field (not in "explanation").
 - No multiple_choice option starts with a letter or number prefix (A., B., 1., 2.).
 - All text visible to the student except native_explanation, native_hint, and native-language vocabulary support is in {target_language_name}.
