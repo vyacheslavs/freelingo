@@ -1,6 +1,6 @@
 ---
 description: "Current-state specification for voice conversation: startup, WebSocket protocol, VAD capture, STT-LLM-TTS turns, playback, persistence, memory, quotas, timeouts, and recovery."
-applyTo: "backend/app/routers/conversation.py, backend/app/services/conversation_pipeline.py, backend/app/services/{assessment_voice_trial,quota_service,memory_service}.py, backend/app/models/{conversation,chat_history,llm_usage}.py, frontend/src/app/(app)/conversation/**, frontend/src/components/conversation/**, frontend/src/lib/{audio,conversation-vad,conversation-ws}.ts, frontend/public/vad/**, frontend/scripts/{patch-vad,copy-vad-models}.js, frontend/package.json"
+applyTo: "backend/app/routers/conversation.py, backend/app/services/conversation_pipeline.py, backend/app/services/{assessment_voice_trial,quota_service,memory_service}.py, backend/app/models/{conversation,chat_history,llm_usage}.py, frontend/src/app/(app)/conversation/**, frontend/src/components/conversation/**, frontend/src/lib/{audio,conversation-vad,conversation-push-to-talk,conversation-ws}.ts, frontend/public/vad/**, frontend/scripts/{patch-vad,copy-vad-models}.js, frontend/package.json"
 ---
 
 # Voice Conversation
@@ -109,7 +109,7 @@ fallback. Voice sessions without a lesson retain the existing word-save contract
 ## Client-to-server protocol
 
 - Initial JSON: authentication and optional session context.
-- Binary: WAV PCM16 mono at 16 kHz for one detected utterance.
+- Binary: WAV PCM16 mono at 16 kHz for one utterance, whether VAD-detected or push-to-talk.
 - `{ "type": "interrupt" }`: cancels the active backend task.
 - `client_event/session_close_request`: requests a clean manual or route-unload close.
 
@@ -163,6 +163,27 @@ TTS does not overlap with LLM generation: synthesis starts after the full visibl
 collected. If every fragment fails TTS, the complete transcript is sent as a successful text-only
 fallback and the turn is persisted. If sending audio over the socket fails after output begins, the
 turn emits `tts_failed` and is not persisted.
+
+## Input modes
+
+Voice conversation offers two input modes chosen in the live session controls; the choice is a
+per-browser (`localStorage`) convenience and carries no backend state.
+
+- Auto listening (default): browser VAD closes an utterance after the configured end-of-turn
+  pause, as described below.
+- Push to talk (`components/conversation/PushToTalkButton.tsx` over
+  `lib/conversation-push-to-talk.ts`): the hold button owns the utterance boundary. Pressing
+  sends `interrupt` when an assistant turn or playback is active, cancels playback, and starts
+  buffering microphone audio over the session's Web Audio context, resampled to 16 kHz on
+  release. Releasing applies the speech quality filter with a short 400 ms minimum hold — a
+  held press is deliberate — then encodes and sends the same 16 kHz WAV frame as a VAD
+  utterance. Cancelling the pointer or losing focus discards the hold. Space is a keyboard
+  hold; long-press context menus and text selection are suppressed on the button.
+
+Both modes share one session lifecycle: VAD still loads and starts normally in push-to-talk
+mode and is merely gated by the mode in its callbacks, so warmup, protocol, turn state, quota
+handling, and teardown are identical. Switching modes mid-session pauses or re-arms VAD and
+discards a held capture.
 
 ## VAD and utterance filtering
 

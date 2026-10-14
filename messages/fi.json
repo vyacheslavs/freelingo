@@ -1369,7 +1369,13 @@
       "Viikonlopun suunnitelmat",
       "Työ ja uratavoitteet",
       "Etätyö"
-    ]
+    ],
+    "voiceModeLabel": "Puheen syöttö",
+    "voiceModeAuto": "Automaattinen",
+    "voiceModePush": "Pidä painettuna",
+    "pttHold": "Pidä pohjassa ja puhu",
+    "pttRelease": "Vapauta lähettääksesi",
+    "pttHint": "Pidä painiketta pohjassa, kun puhut — viestisi lähetetään, kun vapautat."
   },
   "voiceRecorder": {
     "record": "Nauhoita",

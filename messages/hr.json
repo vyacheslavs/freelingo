@@ -1369,7 +1369,13 @@
       "Planovi za vikend",
       "Posao i ciljevi u karijeri",
       "Rad od kuće"
-    ]
+    ],
+    "voiceModeLabel": "Glasovni unos",
+    "voiceModeAuto": "Automatski",
+    "voiceModePush": "Drži za govor",
+    "pttHold": "Drži pritisnuto i govori",
+    "pttRelease": "Otpusti za slanje",
+    "pttHint": "Držite tipku dok govorite — rečenica se šalje kad je otpustite."
   },
   "voiceRecorder": {
     "record": "Snimi",

@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.31] - Unreleased
+
+### Added
+
+- Push-to-talk input mode for voice conversation: a hold button owns the turn boundary — pressing interrupts the assistant, releasing sends the utterance regardless of thinking pauses — selectable alongside the automatic VAD mode in the session controls and remembered per browser, available in all fifteen interface languages.
+
+### Changed
+
+- Lesson generation prompts carry an explanation quality contract: a short mental-model text, standalone per-topic key points, and a contrast pair against the closest confusable form in every lesson's examples.
+
+### Fixed
+
+- Ollama cloud providers no longer answer system-only conversations such as lesson generation with an empty stub: the adapter appends a stub user turn for these calls.
+
 ## [1.10.30] - 2026-10-12
 
 ### Added

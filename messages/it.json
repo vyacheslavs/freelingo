@@ -1369,7 +1369,13 @@
       "Piani per il weekend",
       "Lavoro e obiettivi di carriera",
       "Lavorare da casa"
-    ]
+    ],
+    "voiceModeLabel": "Input vocale",
+    "voiceModeAuto": "Automatico",
+    "voiceModePush": "Premere per parlare",
+    "pttHold": "Tieni premuto per parlare",
+    "pttRelease": "Rilascia per inviare",
+    "pttHint": "Tieni premuto il pulsante mentre parli — la frase viene inviata al rilascio."
   },
   "voiceRecorder": {
     "record": "Registra",

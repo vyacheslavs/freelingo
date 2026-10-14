@@ -1369,7 +1369,13 @@
       "Plans du week-end",
       "Travail et objectifs de carrière",
       "Travail à domicile"
-    ]
+    ],
+    "voiceModeLabel": "Entrée vocale",
+    "voiceModeAuto": "Automatique",
+    "voiceModePush": "Appuyer pour parler",
+    "pttHold": "Maintenez pour parler",
+    "pttRelease": "Relâchez pour envoyer",
+    "pttHint": "Gardez le bouton enfoncé pendant que vous parlez — votre phrase est envoyée au relâchement."
   },
   "voiceRecorder": {
     "record": "Enregistrer",

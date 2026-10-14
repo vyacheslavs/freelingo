@@ -1369,7 +1369,13 @@
       "Weekend plans",
       "Work & career goals",
       "Working from home"
-    ]
+    ],
+    "voiceModeLabel": "Voice input",
+    "voiceModeAuto": "Auto listening",
+    "voiceModePush": "Push to talk",
+    "pttHold": "Hold to talk",
+    "pttRelease": "Release to send",
+    "pttHint": "Keep the button pressed while you speak — your sentence is sent when you release."
   },
   "voiceRecorder": {
     "record": "Record",

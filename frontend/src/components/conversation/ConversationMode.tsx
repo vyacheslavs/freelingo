@@ -7,6 +7,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { TargetLanguageText } from '@/components/TargetLanguageText'
 import { useAuthStore } from '@/store/auth'
 import { resolveVadRedemptionMs } from '@/lib/conversation-vad'
+import {
+  createPushToTalkCapture,
+  type PushToTalkCapture,
+} from '@/lib/conversation-push-to-talk'
 import { useConfigStore } from '@/store/config'
 import { apiFetch } from '@/lib/api'
 import { float32ToWav, createAudioQueue, type AudioQueue } from '@/lib/audio'
@@ -22,6 +26,7 @@ import StatusIndicator, { type ConvStatus } from './StatusIndicator'
 import TranscriptBubble from './TranscriptBubble'
 import SessionTimeoutBanner from './SessionTimeoutBanner'
 import MicButton from './MicButton'
+import PushToTalkButton from './PushToTalkButton'
 import { WordTooltip, useWordSave } from '@/components/ui/WordTooltip'
 import { type QuotaStatus } from '@/types/api'
 import {
@@ -259,6 +264,14 @@ const INTERRUPTION_MIN_UTTERANCE_MS = 1200
 const INTERRUPTION_RMS_THRESHOLD = 0.03
 const BARGE_IN_STARTUP_GUARD_MS = 900
 const VAD_MAX_RMS = 0.25
+// A deliberate push-to-talk hold is already intentional speech; the shorter
+// floor only filters taps and fumbled presses.
+const PTT_MIN_UTTERANCE_MS = 400
+// Voice input mode is a per-browser convenience, not a platform feature:
+// the last choice carries over into the next session silently.
+const VOICE_INPUT_MODE_STORAGE_KEY = 'voice_input_mode'
+
+type VoiceInputMode = 'vad' | 'ptt'
 // Allow the backend's 60-second provider budget plus transport/auth overhead.
 const WARMUP_TIMEOUT_MS = 75_000
 const warmupLogger = getLogger('conversation-warmup')
@@ -311,6 +324,9 @@ export default function ConversationMode({
   const [userSpeaking, setUserSpeaking] = useState(false)
   const [assistantSpeaking, setAssistantSpeaking] = useState(false)
   const [assistantThinking, setAssistantThinking] = useState(false)
+  const [voiceInputMode, setVoiceInputModeState] =
+    useState<VoiceInputMode>('vad')
+  const [pttRecording, setPttRecording] = useState(false)
   const {
     visible: memoryToast,
     announcementId: memoryToastId,
@@ -377,10 +393,24 @@ export default function ConversationMode({
     'unknown'
   )
   const sessionStartedAtRef = useRef<number | null>(null)
+  const voiceInputModeRef = useRef<VoiceInputMode>('vad')
+  const pttCaptureRef = useRef<PushToTalkCapture | null>(null)
+  const pttActiveRef = useRef(false)
 
   useEffect(() => {
     assistantSpeakingRef.current = assistantSpeaking
   }, [assistantSpeaking])
+
+  // Restore the last input-mode choice on mount and keep a ref in step with
+  // it. Callbacks that must not re-run on mode change read the ref instead.
+  useEffect(() => {
+    voiceInputModeRef.current = voiceInputMode
+  }, [voiceInputMode])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem(VOICE_INPUT_MODE_STORAGE_KEY)
+    if (stored === 'ptt' || stored === 'vad') setVoiceInputModeState(stored)
+  }, [])
 
   const isLikelySpeech = useCallback(
     (
@@ -437,6 +467,9 @@ export default function ConversationMode({
       ort.env.wasm.numThreads = 1
     },
     onSpeechStart: () => {
+      // In push-to-talk mode the VAD stays loaded but takes no action: the
+      // hold button owns the utterance boundary.
+      if (voiceInputModeRef.current === 'ptt') return
       if (!sessionActiveRef.current) return
       convLogger.info('vad speech start', {
         assistantSpeaking: assistantSpeakingRef.current,
@@ -446,11 +479,13 @@ export default function ConversationMode({
       setAssistantThinking(false)
     },
     onVADMisfire: () => {
+      if (voiceInputModeRef.current === 'ptt') return
       speechStartedAtRef.current = null
       if (mountedRef.current) setUserSpeaking(false)
     },
     onSpeechEnd: (audio: Float32Array) => {
       if (!mountedRef.current) return
+      if (voiceInputModeRef.current === 'ptt') return
       const minUtteranceMs = assistantTurnActiveRef.current
         ? INTERRUPTION_MIN_UTTERANCE_MS
         : MIN_UTTERANCE_MS
@@ -575,6 +610,118 @@ export default function ConversationMode({
     pauseVadRef.current = vad.pause
   }, [vad.pause])
 
+  // ─── Push to talk ─────────────────────────────────────────────────────────
+  const beginPushToTalk = useCallback(() => {
+    if (voiceInputModeRef.current !== 'ptt') return
+    if (!sessionActiveRef.current || pttActiveRef.current) return
+    const ws = wsRef.current
+    const ctx = audioCtxRef.current
+    const stream = micStreamRef.current
+    if (!ws || ws.readyState !== WebSocket.OPEN || !ctx || !stream) return
+
+    // The press takes the floor: interrupting an in-flight assistant turn is
+    // the point of holding the button, the same right VAD has when enabled.
+    if (assistantTurnActiveRef.current || assistantSpeakingRef.current) {
+      try {
+        ws.send(JSON.stringify({ type: 'interrupt' }))
+      } catch {
+        // Sending must not block starting the hold; the release path checks again.
+      }
+      audioQueueRef.current?.cancel()
+      setAssistantSpeaking(false)
+      setAssistantThinking(false)
+    }
+
+    if (!pttCaptureRef.current) {
+      try {
+        pttCaptureRef.current = createPushToTalkCapture(ctx, stream)
+      } catch {
+        pttCaptureRef.current = null
+        return
+      }
+    }
+    pttActiveRef.current = true
+    speechStartedAtRef.current = performance.now()
+    pttCaptureRef.current.start()
+    setPttRecording(true)
+    setUserSpeaking(true)
+    setAssistantThinking(false)
+  }, [])
+
+  const endPushToTalk = useCallback(
+    (cancel: boolean) => {
+      if (!pttActiveRef.current) return
+      pttActiveRef.current = false
+      const capture = pttCaptureRef.current
+      setPttRecording(false)
+      setUserSpeaking(false)
+      if (cancel) {
+        speechStartedAtRef.current = null
+        capture?.stop()
+        return
+      }
+      const audio = capture?.stop() ?? null
+      speechStartedAtRef.current = null
+      if (!audio || !sessionActiveRef.current) return
+
+      // Deliberate but near-silent or razor-short holds are dropped, the
+      // same misfire filter the VAD path applies.
+      const speech = isLikelySpeech(audio, PTT_MIN_UTTERANCE_MS)
+      if (!speech.isSpeech) {
+        convLogger.warn('push to talk utterance rejected', {
+          rms: speech.rms,
+          durationMs: Math.round(speech.durationMs),
+        })
+        return
+      }
+
+      const ws = wsRef.current
+      if (!ws || ws.readyState !== WebSocket.OPEN) return
+
+      assistantTurnActiveRef.current = true
+      try {
+        const wav = float32ToWav(audio, 16000)
+        ws.send(wav)
+        setErrorMsg(null)
+        setStatus('live')
+      } catch {
+        assistantTurnActiveRef.current = false
+        setErrorMsg(t('errorConnection'))
+        setStatus('error')
+        finalizeSession()
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isLikelySpeech, t]
+  )
+
+  // Switching input modes inside a live session hands the mic to the other
+  // mechanism immediately; a held push-to-talk capture is discarded, not sent.
+  const switchVoiceInputMode = useCallback((mode: VoiceInputMode) => {
+    if (mode === voiceInputModeRef.current) return
+    setVoiceInputModeState(mode)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(VOICE_INPUT_MODE_STORAGE_KEY, mode)
+      } catch {
+        // Storage may be unavailable; the choice applies to this session only.
+      }
+    }
+    if (pttActiveRef.current) endPushToTalk(true)
+    if (!sessionActiveRef.current) return
+    if (mode === 'ptt') {
+      vadOperationRef.current = vadOperationRef.current
+        .then(() => pauseVadRef.current())
+        .catch(() => {})
+    } else {
+      vadOperationRef.current = vadOperationRef.current
+        .then(async () => {
+          await vad.start()
+        })
+        .catch(() => {})
+    }
+  }, [endPushToTalk, vad.start])
+
   const profileRequestRef = useRef<AbortController | null>(null)
   const refreshCurrentUser = useCallback(async () => {
     profileRequestRef.current?.abort()
@@ -639,6 +786,9 @@ export default function ConversationMode({
       assistantTurnActiveRef.current = false
       assistantSpeakingRef.current = false
       speechStartedAtRef.current = null
+      pttActiveRef.current = false
+      pttCaptureRef.current?.dispose()
+      pttCaptureRef.current = null
       const ws = wsRef.current
       wsRef.current = null
       if (ws) {
@@ -677,6 +827,7 @@ export default function ConversationMode({
         setAssistantSpeaking(false)
         setAssistantThinking(false)
         setUserSpeaking(false)
+        setPttRecording(false)
         setStreamingText(null)
         setWarningSeconds(null)
         setSessionActive(false)
@@ -1356,6 +1507,38 @@ export default function ConversationMode({
         ) : quota && !trialMode ? (
           <QuotaPill quota={quota} t={t} />
         ) : null}
+        {sessionActive && (
+          <div
+            role="group"
+            aria-label={t('voiceModeLabel')}
+            className="border-fl-border flex overflow-hidden border"
+          >
+            <button
+              type="button"
+              onClick={() => switchVoiceInputMode('vad')}
+              aria-pressed={voiceInputMode === 'vad'}
+              className={`px-3 py-1.5 font-mono text-xs tracking-widest uppercase transition-colors ${
+                voiceInputMode === 'vad'
+                  ? 'bg-fl-accent text-fl-accent-fg'
+                  : 'bg-fl-surface text-fl-muted-2 hover:text-fl-fg'
+              }`}
+            >
+              {t('voiceModeAuto')}
+            </button>
+            <button
+              type="button"
+              onClick={() => switchVoiceInputMode('ptt')}
+              aria-pressed={voiceInputMode === 'ptt'}
+              className={`px-3 py-1.5 font-mono text-xs tracking-widest uppercase transition-colors ${
+                voiceInputMode === 'ptt'
+                  ? 'bg-fl-accent text-fl-accent-fg'
+                  : 'bg-fl-surface text-fl-muted-2 hover:text-fl-fg'
+              }`}
+            >
+              {t('voiceModePush')}
+            </button>
+          </div>
+        )}
         <StatusIndicator
           status={status}
           userSpeaking={userSpeaking}
@@ -1368,6 +1551,18 @@ export default function ConversationMode({
             onStart={handleStart}
             onStop={handleStop}
           />
+        )}
+        {sessionActive && voiceInputMode === 'ptt' && (
+          <div className="flex flex-col items-center gap-1">
+            <PushToTalkButton
+              recording={pttRecording}
+              onPressStart={beginPushToTalk}
+              onPressEnd={endPushToTalk}
+            />
+            <span className="text-fl-hint text-fl-muted-4 font-mono text-xs tracking-wide">
+              {pttRecording ? t('pttRelease') : t('pttHold')}
+            </span>
+          </div>
         )}
       </div>
       <ReviewPrompt

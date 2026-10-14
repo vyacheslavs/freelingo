@@ -1369,7 +1369,13 @@
       "Helgplaner",
       "Arbete och karriärmål",
       "Att arbeta hemifrån"
-    ]
+    ],
+    "voiceModeLabel": "Talindata",
+    "voiceModeAuto": "Automatiskt",
+    "voiceModePush": "Tryck och prata",
+    "pttHold": "Håll in för att prata",
+    "pttRelease": "Släpp för att skicka",
+    "pttHint": "Håll knappen intryckt medan du pratar — din mening skickas när du släpper."
   },
   "voiceRecorder": {
     "record": "Spela in",

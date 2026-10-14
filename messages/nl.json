@@ -1369,7 +1369,13 @@
       "Weekendplannen",
       "Werk en carrièredoelen",
       "Thuiswerken"
-    ]
+    ],
+    "voiceModeLabel": "Spraakinvoer",
+    "voiceModeAuto": "Automatisch",
+    "voiceModePush": "Druk om te spreken",
+    "pttHold": "Houd ingedrukt om te spreken",
+    "pttRelease": "Laat los om te verzenden",
+    "pttHint": "Houd de knop ingedrukt terwijl je spreekt — je zin wordt verzonden bij het loslaten."
   },
   "voiceRecorder": {
     "record": "Opnemen",

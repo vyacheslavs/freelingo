@@ -1369,7 +1369,13 @@
       "Hafta sonu planları",
       "İş ve kariyer hedefleri",
       "Evden çalışma"
-    ]
+    ],
+    "voiceModeLabel": "Sesli giriş",
+    "voiceModeAuto": "Otomatik",
+    "voiceModePush": "Basıp konuş",
+    "pttHold": "Basılı tutup konuş",
+    "pttRelease": "Göndermek için bırak",
+    "pttHint": "Konuşurken düğmeyi basılı tutun — bıraktığınızda cümleniz gönderilir."
   },
   "voiceRecorder": {
     "record": "Kaydet",

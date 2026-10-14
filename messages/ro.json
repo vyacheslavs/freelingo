@@ -1369,7 +1369,13 @@
       "Planuri de weekend",
       "Muncă și obiective de carieră",
       "Munca de acasă"
-    ]
+    ],
+    "voiceModeLabel": "Intrare vocală",
+    "voiceModeAuto": "Automat",
+    "voiceModePush": "Apăsați și vorbiți",
+    "pttHold": "Țineți apăsat ca să vorbiți",
+    "pttRelease": "Eliberați pentru a trimite",
+    "pttHint": "Țineți butonul apăsat cât timp vorbiți — propoziția se trimite la eliberare."
   },
   "voiceRecorder": {
     "record": "Înregistrează",

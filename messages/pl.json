@@ -1369,7 +1369,13 @@
       "Plany na weekend",
       "Praca i cele zawodowe",
       "Praca zdalna"
-    ]
+    ],
+    "voiceModeLabel": "Wejście głosowe",
+    "voiceModeAuto": "Automatycznie",
+    "voiceModePush": "Naciśnij i mów",
+    "pttHold": "Przytrzymaj, aby mówić",
+    "pttRelease": "Puść, aby wysłać",
+    "pttHint": "Trzymaj przycisk wciśnięty podczas mówienia — zdanie zostanie wysłane po puszczeniu."
   },
   "voiceRecorder": {
     "record": "Nagraj",

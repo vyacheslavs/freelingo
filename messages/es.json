@@ -1369,7 +1369,13 @@
       "Planes de fin de semana",
       "Trabajo y objetivos profesionales",
       "Trabajar desde casa"
-    ]
+    ],
+    "voiceModeLabel": "Entrada de voz",
+    "voiceModeAuto": "Automático",
+    "voiceModePush": "Mantener para hablar",
+    "pttHold": "Mantén pulsado para hablar",
+    "pttRelease": "Suelta para enviar",
+    "pttHint": "Mantén pulsado el botón mientras hablas: tu frase se envía al soltar."
   },
   "voiceRecorder": {
     "record": "Grabar",

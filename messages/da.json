@@ -1369,7 +1369,13 @@
       "Weekendplaner",
       "Arbejde og karrieremål",
       "At arbejde hjemmefra"
-    ]
+    ],
+    "voiceModeLabel": "Taleindgang",
+    "voiceModeAuto": "Automatisk",
+    "voiceModePush": "Tryk og tal",
+    "pttHold": "Hold nede og tal",
+    "pttRelease": "Slip for at sende",
+    "pttHint": "Hold knappen nede, mens du taler — din sætning sendes, når du slipper."
   },
   "voiceRecorder": {
     "record": "Optag",

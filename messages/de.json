@@ -1369,7 +1369,13 @@
       "Wochendpläne",
       "Arbeit und Karriereziele",
       "Homeoffice"
-    ]
+    ],
+    "voiceModeLabel": "Spracheingabe",
+    "voiceModeAuto": "Automatisch",
+    "voiceModePush": "Drücken zum Sprechen",
+    "pttHold": "Zum Sprechen gedrückt halten",
+    "pttRelease": "Zum Senden loslassen",
+    "pttHint": "Halte die Taste gedrückt, während du sprichst — beim Loslassen wird dein Satz gesendet."
   },
   "voiceRecorder": {
     "record": "Aufnehmen",
